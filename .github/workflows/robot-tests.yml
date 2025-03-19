@@ -1,0 +1,49 @@
+name: Robot Framework Tests
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  robot_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Checkout Robot-Auto repository
+        uses: actions/checkout@v3
+        with:
+          repository: betogouvea/Robot-Auto
+          path: Robot-Auto
+
+      - name: Instalação do Python e Robot Framework
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Instalar Robot Framework
+        run: |
+          pip install robotframework
+          pip install robotframework-seleniumlibrary
+
+      - name: Executar Successful Login
+        run: |
+          robot --test "Successful Login" Robot-Auto/teste_login_checkout.robot/teste_login.robot
+
+      - name: Salvar relatórios do Robot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-reports
+          path: Robot-Auto
+  notifications:
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Envio de notificação de sucesso
+        if: success()
+        run: echo "✅ Todos os testes passaram!" >> $GITHUB_STEP_SUMMARY
+
+      - name: Envio de notificação de falha
+        if: failure()
+        run: echo "❌ Algum teste falhou! Verifique os relatórios." >> $GITHUB_STEP_SUMMARY
