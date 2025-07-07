@@ -1,7 +1,7 @@
 name: Robot Framework Tests
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   robot_tests:
@@ -36,14 +36,38 @@ jobs:
         with:
           name: robot-reports
           path: Robot-Auto
+
   notifications:
+    needs: robot_tests
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - name: Envio de notificação de sucesso
+      - name: Enviar e-mail em caso de sucesso
         if: success()
-        run: echo "✅ Todos os testes passaram!" >> $GITHUB_STEP_SUMMARY
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: '✅ Testes passaram com sucesso!'
+          to: beetoogouvea@gmail.com
+          from: GitHub Actions
+          body: |
+            Todos os testes passaram com sucesso!  
+            Veja os relatórios anexados no GitHub Actions.
 
-      - name: Envio de notificação de falha
+      - name: Enviar e-mail em caso de falha
         if: failure()
-        run: echo "❌ Algum teste falhou! Verifique os relatórios." >> $GITHUB_STEP_SUMMARY
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: '❌ Algum teste falhou!'
+          to: beetoogouvea@gmail.com
+          from: GitHub Actions
+          body: |
+            Algum teste falhou.  
+            Verifique os relatórios do workflow no GitHub Actions.
