@@ -1,11 +1,11 @@
 name: Cypress Tests
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   cypress_tests:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -21,10 +21,16 @@ jobs:
         with:
           node-version: "18"
 
-      - name: Instalação do Cypress
+      - name: Instalação das dependências
         run: |
           cd Cypress-Auto
-          npm install cypress
+          npm ci
+
+      # Se você quiser compilar antes (opcional, caso seu projeto precise):
+      # - name: Compilar TypeScript
+      #   run: |
+      #     cd Cypress-Auto
+      #     npx tsc
 
       - name: Rodar Testes do Cypress
         run: |
@@ -37,6 +43,7 @@ jobs:
         with:
           name: cypress-videos
           path: Cypress-Auto/cypress/videos
+
   notifications:
     runs-on: ubuntu-latest
     if: always()
@@ -48,3 +55,4 @@ jobs:
       - name: Envio de notificação de falha
         if: failure()
         run: echo "❌ Algum teste falhou! Verifique os relatórios." >> $GITHUB_STEP_SUMMARY
+
