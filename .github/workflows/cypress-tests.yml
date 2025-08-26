@@ -24,9 +24,9 @@ jobs:
       - name: Instalação das dependências
         run: |
           cd Cypress-Auto
-          npm ci
+          npm install
 
-      # Se você quiser compilar antes (opcional, caso seu projeto precise):
+      # Passo opcional: só use se precisar compilar antes de rodar o Cypress
       # - name: Compilar TypeScript
       #   run: |
       #     cd Cypress-Auto
@@ -55,4 +55,3 @@ jobs:
       - name: Envio de notificação de falha
         if: failure()
         run: echo "❌ Algum teste falhou! Verifique os relatórios." >> $GITHUB_STEP_SUMMARY
-
