@@ -16,7 +16,14 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Garante histórico completo para o git diff
+          fetch-depth: 0
+
+      - name: Checkout Cypress-Auto repository
+        uses: actions/checkout@v3
+        with:
+          repository: betogouvea/Cypress-Auto
+          path: Cypress-Auto
+          fetch-depth: 0  # IMPORTANTE: histórico completo para git diff
 
       - name: Instalação do Node.js
         uses: actions/setup-node@v4
@@ -25,19 +32,23 @@ jobs:
 
       - name: Instalação das dependências
         run: |
+          cd Cypress-Auto
           npm install
 
       - name: Compilar TypeScript
         run: |
+          cd Cypress-Auto
           npx tsc
 
       - name: Selecionar testes impactados
         run: |
+          cd Cypress-Auto
           TESTS=$(node dist/scripts/select-tests.js)
           echo "TESTS=$TESTS" >> $GITHUB_ENV
 
       - name: Rodar Testes do Cypress
         run: |
+          cd Cypress-Auto
           echo "Rodando testes: $TESTS"
           npx cypress run --spec "$TESTS"
 
@@ -46,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cypress-videos
-          path: cypress/videos
+          path: Cypress-Auto/cypress/videos
 
   notifications:
     runs-on: ubuntu-latest
