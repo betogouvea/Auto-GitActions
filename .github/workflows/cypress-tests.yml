@@ -4,10 +4,16 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'cypress/**'  # Dispara se houver mudanças em arquivos Cypress neste repo
   pull_request:
     branches:
       - main
+    paths:
+      - 'cypress/**'  # Dispara em PRs com mudanças Cypress neste repo
   workflow_dispatch:
+  repository_dispatch:  # ← NOVO: Permite ser acionado por webhooks externos
+    types: [cypress-updated]
 
 jobs:
   cypress_tests:
@@ -24,6 +30,7 @@ jobs:
           repository: betogouvea/Cypress-Auto
           path: Cypress-Auto
           fetch-depth: 0
+          ref: ${{ github.event.client_payload.ref || 'main' }}  # ← Usa a branch do webhook
 
       - name: Instalação do Node.js
         uses: actions/setup-node@v4
