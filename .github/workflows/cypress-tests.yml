@@ -1,6 +1,12 @@
 name: Cypress Tests
 
 on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -26,16 +32,61 @@ jobs:
           cd Cypress-Auto
           npm install
 
-      # Passo opcional: só use se precisar compilar antes de rodar o Cypress
-      # - name: Compilar TypeScript
-      #   run: |
-      #     cd Cypress-Auto
-      #     npx tsc
+      - name: Criar script de seleção de testes
+        run: |
+          cd Cypress-Auto
+          mkdir -p scripts
+          cat << 'EOF' > scripts/select-tests.js
+          const { execSync } = require("child_process");
+          const fs = require("fs");
+
+          function getChangedFiles() {
+            const output = execSync("git diff --name-only origin/main...HEAD").toString();
+            return output.split("\n").filter(Boolean);
+          }
+
+          function resolveTests(files) {
+            const mapping = [
+              { path: "cypress/e2e/coffee/", spec: "cypress/e2e/coffee/**/*.cy.ts" },
+              { path: "cypress/e2e/saucedemo/", spec: "cypress/e2e/saucedemo/**/*.cy.ts" },
+            ];
+
+            const tests = new Set();
+
+            files.forEach(file => {
+              mapping.forEach(entry => {
+                if (file.startsWith(entry.path)) {
+                  tests.add(entry.spec);
+                }
+              });
+            });
+
+            return [...tests];
+          }
+
+          const changedFiles = getChangedFiles();
+          const testsToRun = resolveTests(changedFiles);
+
+          if (testsToRun.length === 0) {
+            console.log("cypress/e2e/**/*.cy.ts"); // fallback: roda todos
+          } else {
+            console.log(testsToRun.join(","));
+          }
+          EOF
+
+      - name: Selecionar testes impactados
+        run: |
+          cd Cypress-Auto
+          node scripts/select-tests.js > impacted-tests.txt
+          echo "Testes selecionados:"
+          cat impacted-tests.txt
 
       - name: Rodar Testes do Cypress
         run: |
           cd Cypress-Auto
-          npx cypress run
+          TESTS=$(cat impacted-tests.txt)
+          echo "Rodando testes: $TESTS"
+          npx cypress run --spec "$TESTS"
 
       - name: Salvar vídeos do Cypress
         if: always()
