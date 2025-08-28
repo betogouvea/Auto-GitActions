@@ -15,12 +15,15 @@ jobs:
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # pega todo o histórico
 
       - name: Checkout Cypress-Auto repository
         uses: actions/checkout@v3
         with:
           repository: betogouvea/Cypress-Auto
           path: Cypress-Auto
+          fetch-depth: 0  # pega todo o histórico
 
       - name: Instalação do Node.js
         uses: actions/setup-node@v4
@@ -38,11 +41,12 @@ jobs:
           mkdir -p scripts
           cat << 'EOF' > scripts/select-tests.js
           const { execSync } = require("child_process");
-          const fs = require("fs");
 
           function getChangedFiles() {
-            const output = execSync("git diff --name-only origin/main...HEAD").toString();
-            return output.split("\n").filter(Boolean);
+            // Se for PR, usa branch base, senão usa origin/main
+            const base = process.env.GITHUB_BASE_REF || "origin/main";
+            const output = execSync(\`git diff --name-only \${base}\`).toString();
+            return output.split("\\n").filter(Boolean);
           }
 
           function resolveTests(files) {
