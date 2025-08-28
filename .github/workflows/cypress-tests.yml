@@ -16,14 +16,14 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # pega todo o histórico
+          fetch-depth: 0  # garante histórico
 
       - name: Checkout Cypress-Auto repository
         uses: actions/checkout@v3
         with:
           repository: betogouvea/Cypress-Auto
           path: Cypress-Auto
-          fetch-depth: 0  # pega todo o histórico
+          fetch-depth: 0
 
       - name: Instalação do Node.js
         uses: actions/setup-node@v4
@@ -35,48 +35,10 @@ jobs:
           cd Cypress-Auto
           npm install
 
-      - name: Criar script de seleção de testes
+      - name: Compilar TypeScript
         run: |
           cd Cypress-Auto
-          mkdir -p scripts
-          cat << 'EOF' > scripts/select-tests.js
-          const { execSync } = require("child_process");
-
-          function getChangedFiles() {
-            // Se for PR, usa branch base, senão usa origin/main
-            const base = process.env.GITHUB_BASE_REF || "origin/main";
-            const output = execSync(\`git diff --name-only \${base}\`).toString();
-            return output.split("\\n").filter(Boolean);
-          }
-
-          function resolveTests(files) {
-            const mapping = [
-              { path: "cypress/e2e/coffee/", spec: "cypress/e2e/coffee/**/*.cy.ts" },
-              { path: "cypress/e2e/saucedemo/", spec: "cypress/e2e/saucedemo/**/*.cy.ts" },
-            ];
-
-            const tests = new Set();
-
-            files.forEach(file => {
-              mapping.forEach(entry => {
-                if (file.startsWith(entry.path)) {
-                  tests.add(entry.spec);
-                }
-              });
-            });
-
-            return [...tests];
-          }
-
-          const changedFiles = getChangedFiles();
-          const testsToRun = resolveTests(changedFiles);
-
-          if (testsToRun.length === 0) {
-            console.log("cypress/e2e/**/*.cy.ts"); // fallback: roda todos
-          } else {
-            console.log(testsToRun.join(","));
-          }
-          EOF
+          npx tsc scripts/select-tests.ts --outDir scripts --esModuleInterop --module commonjs
 
       - name: Selecionar testes impactados
         run: |
