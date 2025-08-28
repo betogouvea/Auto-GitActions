@@ -5,25 +5,14 @@ on:
     branches:
       - main
   pull_request:
-    branches:
-      - main
-  workflow_dispatch:
 
 jobs:
   cypress_tests:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # garante histórico
-
-      - name: Checkout Cypress-Auto repository
-        uses: actions/checkout@v3
-        with:
-          repository: betogouvea/Cypress-Auto
-          path: Cypress-Auto
-          fetch-depth: 0
 
       - name: Instalação do Node.js
         uses: actions/setup-node@v4
@@ -31,35 +20,26 @@ jobs:
           node-version: "18"
 
       - name: Instalação das dependências
-        run: |
-          cd Cypress-Auto
-          npm install
+        run: npm install
 
       - name: Compilar TypeScript
-        run: |
-          cd Cypress-Auto
-          npx tsc scripts/select-tests.ts --outDir scripts --esModuleInterop --module commonjs
+        run: npx tsc
 
       - name: Selecionar testes impactados
+        id: select-tests
         run: |
-          cd Cypress-Auto
-          node scripts/select-tests.js > impacted-tests.txt
-          echo "Testes selecionados:"
-          cat impacted-tests.txt
+          TESTS=$(node dist/scripts/select-tests.js)
+          echo "tests=$TESTS" >> $GITHUB_ENV
 
       - name: Rodar Testes do Cypress
-        run: |
-          cd Cypress-Auto
-          TESTS=$(cat impacted-tests.txt)
-          echo "Rodando testes: $TESTS"
-          npx cypress run --spec "$TESTS"
+        run: npx cypress run --spec "$tests"
 
       - name: Salvar vídeos do Cypress
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-videos
-          path: Cypress-Auto/cypress/videos
+          path: cypress/videos
 
   notifications:
     runs-on: ubuntu-latest
