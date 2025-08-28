@@ -23,7 +23,7 @@ jobs:
         with:
           repository: betogouvea/Cypress-Auto
           path: Cypress-Auto
-          fetch-depth: 0  # IMPORTANTE: histórico completo para git diff
+          fetch-depth: 0
 
       - name: Instalação do Node.js
         uses: actions/setup-node@v4
@@ -45,6 +45,7 @@ jobs:
           cd Cypress-Auto
           TESTS=$(node dist/scripts/select-tests.js)
           echo "TESTS=$TESTS" >> $GITHUB_ENV
+          echo "Testes selecionados: $TESTS"
 
       - name: Rodar Testes do Cypress
         run: |
