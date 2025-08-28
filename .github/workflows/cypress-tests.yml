@@ -5,14 +5,18 @@ on:
     branches:
       - main
   pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   cypress_tests:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Garante histórico completo para o git diff
 
       - name: Instalação do Node.js
         uses: actions/setup-node@v4
@@ -20,19 +24,22 @@ jobs:
           node-version: "18"
 
       - name: Instalação das dependências
-        run: npm install
+        run: |
+          npm install
 
       - name: Compilar TypeScript
-        run: npx tsc
+        run: |
+          npx tsc
 
       - name: Selecionar testes impactados
-        id: select-tests
         run: |
           TESTS=$(node dist/scripts/select-tests.js)
-          echo "tests=$TESTS" >> $GITHUB_ENV
+          echo "TESTS=$TESTS" >> $GITHUB_ENV
 
       - name: Rodar Testes do Cypress
-        run: npx cypress run --spec "$tests"
+        run: |
+          echo "Rodando testes: $TESTS"
+          npx cypress run --spec "$TESTS"
 
       - name: Salvar vídeos do Cypress
         if: always()
